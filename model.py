@@ -3,11 +3,16 @@ import cv2
 import numpy as np
 
 
+#keras v1.2.1
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
-from keras.layers.convolutional import Convolution2D
+from keras.layers.convolutional import Convolution2D as Conv2D
 from keras.layers.pooling import MaxPooling2D
+from keras.regularizers import l2
 
+
+from keras import backend as K
+print K.image_dim_ordering()
 
 class DataReader:
     """This class reads the file and returns required data"""
@@ -27,6 +32,8 @@ class DataReader:
                 img_name = row[0].split("/")[-1]
                 current_path = "data/IMG/" + img_name
                 image = cv2.imread(current_path)
+                # Preprocess the image here and append it to the list.
+                image = image[60:140,:] #cv2.resize(image[60:140,:], (64,64))
                 imgs.append(image)
                 imgs.append(cv2.flip(image, 1))
                 steer_angle = float(row[3])
@@ -50,18 +57,18 @@ class KerasModel(object):
 
     def make_conv_layers(self):
         self.model = Sequential()
-        self.model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(160,320,3)))
+        self.model.add(Lambda(lambda x: (x / 255.0) - 0.5, input_shape=(80,320,3)))
         # Add Conv Layers based on the paper https://arxiv.org/pdf/1604.07316v1.pdf
-        self.model.add(Conv2D(filters=24, kernel_size=(5,5), strides=(2,2), activation="relu"))
-        self.model.add(MaxPooling2D())
-        self.model.add(Conv2D(filters=36, kernel_size=(5,5), strides=(2,2), activation="relu"))
-        self.model.add(MaxPooling2D())
-        self.model.add(Conv2D(filters=48, kernel_size=(5,5), strides=(2,2), activation="relu"))
-        self.model.add(MaxPooling2D())
-        self.model.add(Conv2D(filters=64, kernel_size=(3,3), activation="relu"))
-        self.model.add(MaxPooling2D())
-        self.model.add(Conv2D(filters=64, kernel_size=(3,3), activation="relu"))
-        self.model.add(MaxPooling2D())
+        self.model.add(Conv2D(24,5,5, activation="relu", border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
+        # self.model.add(MaxPooling2D())
+        self.model.add(Conv2D(36,5,5, activation="relu", border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
+        # self.model.add(MaxPooling2D())
+        self.model.add(Conv2D(48,5,5, activation="relu", border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
+        # self.model.add(MaxPooling2D())
+        self.model.add(Conv2D(64,3,3, activation="relu", border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
+        # self.model.add(MaxPooling2D())
+        self.model.add(Conv2D(64,3,3, activation="relu", border_mode='valid', subsample =(2,2), W_regularizer = l2(0.001)))
+        # self.model.add(MaxPooling2D())
 
         self.model.add(Flatten())
         self.model.add(Dense(100))
