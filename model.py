@@ -141,7 +141,7 @@ class KerasModel(object):
         self.model.compile(loss='mse', optimizer='adam')
 
     def train_model(self):
-        self.model.fit(self.x_train, self.y_train, validation_split = 0.2, shuffle = True, nb_epoch = 1)
+        self.model.fit(self.x_train, self.y_train, validation_split = 0.2, shuffle = True, nb_epoch = 20)
 
     def save_model(self):
         self.model.save("model.h5")
