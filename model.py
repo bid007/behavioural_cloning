@@ -7,6 +7,9 @@ from sklearn.utils import shuffle
 from sklearn.cross_validation import train_test_split
 import math
 import matplotlib.image as mpimg
+import time
+import sys
+import argparse
 
 #keras v1.2.1
 from keras.models import Sequential
@@ -113,10 +116,11 @@ class DataReader:
         return image[60:140,:]
 
 class KerasModel(object):
-    def __init__(self, x_train, y_train):
+    def __init__(self, x_train, y_train, epoch):
         self.model = None
         self.x_train = x_train
         self.y_train = y_train
+        self.epoch = epoch
 
     def make_conv_layers(self):
         self.model = Sequential()
@@ -141,7 +145,7 @@ class KerasModel(object):
         self.model.compile(loss='mse', optimizer='adam')
 
     def train_model(self):
-        self.model.fit(self.x_train, self.y_train, validation_split = 0.2, shuffle = True, nb_epoch = 20)
+        self.model.fit(self.x_train, self.y_train, validation_split = 0.2, shuffle = True, nb_epoch = self.epoch)
 
     def save_model(self):
         self.model.save("model.h5")
@@ -149,11 +153,36 @@ class KerasModel(object):
     def get_model_summary(self):
         return self.model.summary()
 
+parser = argparse.ArgumentParser(description='Run the End-to-End Driving Model.')
+parser.add_argument("--epoch", help="The # of iterations to run.", type=int)
+parser.add_argument("--benchmark", help="Benchmark the Model??", action="store_true")
+args = parser.parse_args()
+
+if not args.epoch:
+    epoch = 1
+else:
+    epoch = args.epoch
+
+if not args.benchmark:
+    benchmark = False
+else:
+    benchmark = True
+
+print "epoch ", epoch, " benchmark ", benchmark
 data = DataReader("data/driving_log.csv")
 x_train = data.get_imgs()
 y_train = data.get_measurements()
 
-km = KerasModel(x_train, y_train)
+km = KerasModel(x_train, y_train, epoch)
 km.make_conv_layers()
+
+if benchmark:
+    start_time = time.time()
+
 km.train_model()
-km.save_model()                                                                                                   
+
+if benchmark:
+    end_time = time.time()
+    print("Total Training time ", end_time-start_time," seconds")
+
+km.save_model()                                                                                                  
