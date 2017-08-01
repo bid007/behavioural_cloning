@@ -168,7 +168,6 @@ if not args.benchmark:
 else:
     benchmark = True
 
-print "epoch ", epoch, " benchmark ", benchmark
 data = DataReader("data/driving_log.csv")
 x_train = data.get_imgs()
 y_train = data.get_measurements()
