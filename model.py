@@ -146,6 +146,9 @@ class KerasModel(object):
     def save_model(self):
         self.model.save("model.h5")
 
+    def get_model_summary(self):
+        return self.model.summary()
+
 data = DataReader("data/driving_log.csv")
 x_train = data.get_imgs()
 y_train = data.get_measurements()
